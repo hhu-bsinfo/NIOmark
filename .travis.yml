@@ -1,0 +1,27 @@
+os: linux
+dist: bionic
+language: java
+
+stages:
+  - name: build
+
+jobs:
+  include:
+    - stage: build
+      script:
+        - ./gradlew distZip
+
+before_deploy:
+  - export DIST_ZIP_FILE=$(ls build/example/distributions/*.zip)
+
+deploy:
+  provider: releases
+  token: ${ACCESS_TOKEN}
+  file:
+    - ${DIST_ZIP_FILE}
+  cleanup: false
+  overwrite: true
+  on:
+    repo: hhu-bsinfo/nio-benchmark
+    branch: main
+    tags: true

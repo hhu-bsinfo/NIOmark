@@ -1,0 +1,4 @@
+rootProject.name = 'nio-benchmark'
+include 'application'
+include 'benchmark'
+
