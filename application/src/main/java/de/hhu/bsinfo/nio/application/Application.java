@@ -30,7 +30,6 @@ public class Application implements Runnable {
     private int incomingConnections = 0;
 
     @CommandLine.Parameters(
-            arity = "1",
             description = "The remote addresses to connect to."
     )
     private Set<InetSocketAddress> outgoingConnections = new HashSet<>();
@@ -45,18 +44,21 @@ public class Application implements Runnable {
             benchmark = Benchmark.createBenchmark(bindAddress, outgoingConnections, incomingConnections);
         } catch (IOException e) {
             LOGGER.error("Failed to create benchmark instance", e);
+            return;
         }
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        final var shutdownHook = new Thread(() -> {
             LOGGER.info("Received shutdown signal");
             try {
                 benchmark.close();
             } catch (IOException e) {
                 LOGGER.error("Failed to close benchmark", e);
             }
-        }));
+        });
 
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
         benchmark.run();
+        Runtime.getRuntime().removeShutdownHook(shutdownHook);
     }
 
     public static void main(String... args) {

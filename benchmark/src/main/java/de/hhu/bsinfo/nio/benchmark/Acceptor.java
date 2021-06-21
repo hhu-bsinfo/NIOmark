@@ -9,44 +9,49 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
-public class Acceptor implements Runnable, Closeable {
+class Acceptor extends Handler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Acceptor.class);
 
-    private final Benchmark benchmark;
+    private final ConnectionReactor reactor;
     private final ServerSocketChannel serverSocketChannel;
-    private final SelectionKey key;
 
-    public Acceptor(final Benchmark benchmark, final ServerSocketChannel serverSocketChannel, final SelectionKey key) {
-        this.benchmark = benchmark;
+    public Acceptor(final ConnectionReactor reactor, final ServerSocketChannel serverSocketChannel, final SelectionKey key) {
+        super(key);
+        this.reactor = reactor;
         this.serverSocketChannel = serverSocketChannel;
-        this.key = key;
     }
 
     @Override
-    public void run() {
-        LOGGER.info("Handling incoming connection request");
-        SocketChannel socketChannel;
+    protected void handle(final SelectionKey key) {
+        if (key.isAcceptable()) {
+            LOGGER.info("Handling incoming connection request");
+            SocketChannel socketChannel;
 
-        try {
-            socketChannel = serverSocketChannel.accept();
-            benchmark.addIncomingConnection(socketChannel);
-        } catch (IOException e) {
-            LOGGER.error("Failed to accept connection request", e);
-            return;
-        }
+            try {
+                socketChannel = serverSocketChannel.accept();
+                socketChannel.configureBlocking(false);
+                final var socketKey = socketChannel.register(key.selector(), SelectionKey.OP_WRITE);
+                final var handler = new ConnectionHandler(reactor, socketChannel, socketKey);
+                socketKey.attach(handler);
+            } catch (IOException e) {
+                LOGGER.error("Failed to accept connection request", e);
+                return;
+            }
 
-        try {
-            LOGGER.info("Accepted connection request from [{}]", socketChannel.getRemoteAddress());
-        } catch (IOException e) {
-            LOGGER.info("Accepted connection request");
+            try {
+                LOGGER.info("Accepted connection request from [{}]", socketChannel.getRemoteAddress());
+            } catch (IOException e) {
+                LOGGER.info("Accepted connection request");
+            }
         }
     }
 
     @Override
-    public void close() throws IOException {
+    protected void close(SelectionKey key) throws IOException {
         LOGGER.info("Closing acceptor");
         key.cancel();
         serverSocketChannel.close();
     }
+
 }
