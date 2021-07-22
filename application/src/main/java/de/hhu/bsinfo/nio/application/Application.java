@@ -61,7 +61,7 @@ public class Application implements Runnable {
         Runtime.getRuntime().removeShutdownHook(shutdownHook);
     }
 
-    public static void main(String... args) {
+    public static void main(final String... args) {
         final int exitCode = new CommandLine(new Application())
                 .registerConverter(InetSocketAddress.class, new InetSocketAddressConverter(DEFAULT_SERVER_PORT))
                 .setCaseInsensitiveEnumValuesAllowed(true)

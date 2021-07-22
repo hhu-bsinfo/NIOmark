@@ -3,7 +3,6 @@ package de.hhu.bsinfo.nio.benchmark;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
@@ -48,7 +47,7 @@ class Acceptor extends Handler {
     }
 
     @Override
-    protected void close(SelectionKey key) throws IOException {
+    protected void close(final SelectionKey key) throws IOException {
         LOGGER.info("Closing acceptor");
         key.cancel();
         serverSocketChannel.close();

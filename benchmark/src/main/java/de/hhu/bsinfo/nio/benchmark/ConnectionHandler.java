@@ -23,7 +23,7 @@ public class ConnectionHandler extends Handler {
     private final ByteBuffer receiveBuffer = ByteBuffer.allocateDirect(CONNECTION_MESSAGE.getBytes(StandardCharsets.UTF_8).length);
     private final boolean outgoing;
 
-    public ConnectionHandler(ConnectionReactor reactor, SocketChannel socketChannel, SelectionKey key, InetSocketAddress remoteAddress) {
+    public ConnectionHandler(final ConnectionReactor reactor, final SocketChannel socketChannel, final SelectionKey key, final InetSocketAddress remoteAddress) {
         super(key);
         this.reactor = reactor;
         this.socketChannel = socketChannel;
@@ -34,7 +34,7 @@ public class ConnectionHandler extends Handler {
         sendBuffer.rewind();
     }
 
-    public ConnectionHandler(ConnectionReactor reactor, SocketChannel socketChannel, SelectionKey key) {
+    public ConnectionHandler(final ConnectionReactor reactor, final SocketChannel socketChannel, final SelectionKey key) {
         super(key);
         this.reactor = reactor;
         this.socketChannel = socketChannel;
@@ -130,13 +130,15 @@ public class ConnectionHandler extends Handler {
     private void finishConnection(final SelectionKey key) {
         if (outgoing) {
             key.interestOps(SelectionKey.OP_WRITE);
-            // TODO: Attach benchmark handler
-            key.attach(null);
+            // TODO: Replace hardcoded values with variables
+            final var handler = new ThroughputWriteHandler(socketChannel, key, 10000, 32768);
+            key.attach(handler);
             reactor.addEstablishedConnection(remoteAddress);
         } else {
             key.interestOps(SelectionKey.OP_READ);
-            // TODO: Attach benchmark handler
-            key.attach(null);
+            // TODO: Replace hardcoded values with variables
+            final var handler = new ThroughputReadHandler(socketChannel, key, 10000, 32768);
+            key.attach(handler);
             reactor.addIncomingConnection();
         }
 

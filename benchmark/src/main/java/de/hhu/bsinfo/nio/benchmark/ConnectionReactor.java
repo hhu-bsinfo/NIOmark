@@ -32,6 +32,9 @@ public class ConnectionReactor extends Reactor {
     }
 
     @Override
+    protected void prepare(Selector selector) {}
+
+    @Override
     public void react(final Selector selector) {
         for (final var address : remainingConnections) {
             try {
@@ -63,7 +66,7 @@ public class ConnectionReactor extends Reactor {
             return;
         }
 
-        for (final SelectionKey key : selector.selectedKeys()) {
+        for (final var key : selector.selectedKeys()) {
             final Runnable runnable = (Runnable) key.attachment();
             if (runnable != null) {
                 runnable.run();

@@ -19,9 +19,11 @@ public class Benchmark implements Runnable, Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(Benchmark.class);
 
     private final ConnectionReactor connectionReactor;
+    private final BenchmarkReactor benchmarkReactor;
 
     private Benchmark(final Selector selector, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
         connectionReactor = new ConnectionReactor(selector, outgoingConnections, incomingConnections);
+        benchmarkReactor = new BenchmarkReactor(selector);
     }
 
     public static Benchmark createBenchmark(final InetSocketAddress localAddress, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) throws IOException {
@@ -49,7 +51,9 @@ public class Benchmark implements Runnable, Closeable {
         connectionReactor.run();
         LOGGER.info("Finished connection reactor");
 
-        LOGGER.info("Finished benchmark");
+        LOGGER.info("Starting benchmark reactor");
+        benchmarkReactor.run();
+        LOGGER.info("Finished benchmark reactor");
     }
 
     @Override
@@ -58,16 +62,17 @@ public class Benchmark implements Runnable, Closeable {
     }
 
     public static void printBanner() {
-        final InputStream inputStream = Benchmark.class.getClassLoader().getResourceAsStream("banner.txt");
+        final var inputStream = Benchmark.class.getClassLoader().getResourceAsStream("banner.txt");
         if (inputStream == null) {
             return;
         }
 
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        final String banner = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        final var reader = new BufferedReader(new InputStreamReader(inputStream));
+        final var banner = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+        final var provider = System.getProperty("java.nio.channels.spi.SelectorProvider");
 
         System.out.print("\n");
-        System.out.printf(banner, BuildConfig.VERSION, BuildConfig.BUILD_DATE, BuildConfig.GIT_BRANCH, BuildConfig.GIT_COMMIT);
+        System.out.printf(banner, BuildConfig.VERSION, BuildConfig.BUILD_DATE, BuildConfig.GIT_BRANCH, BuildConfig.GIT_COMMIT, provider == null ? "Default" : provider);
         System.out.print("\n\n");
     }
 }
