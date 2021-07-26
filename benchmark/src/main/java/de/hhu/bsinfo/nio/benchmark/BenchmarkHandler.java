@@ -1,5 +1,7 @@
 package de.hhu.bsinfo.nio.benchmark;
 
+import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
+
 import java.nio.channels.SelectionKey;
 
 public abstract class BenchmarkHandler extends Handler {

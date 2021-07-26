@@ -1,5 +1,6 @@
 package de.hhu.bsinfo.nio.benchmark;
 
+import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
 import de.hhu.bsinfo.nio.benchmark.result.ThroughputMeasurement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,7 @@ public class ThroughputReadHandler extends BenchmarkHandler {
     protected void close(final SelectionKey key) throws IOException {
         key.cancel();
         measurement.setMeasuredTime(System.nanoTime() - startTime);
+        ThroughputCombiner.getInstance().addMeasurement(measurement);
         LOGGER.info(measurement.toString());
     }
 }

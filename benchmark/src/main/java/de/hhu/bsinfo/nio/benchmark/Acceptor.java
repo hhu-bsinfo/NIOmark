@@ -33,7 +33,7 @@ class Acceptor extends Handler {
                 final var socketKey = socketChannel.register(key.selector(), SelectionKey.OP_WRITE);
 
                 // TODO: Replace hardcoded values with variables
-                final var benchmarkHandler = new ThroughputReadHandler(socketChannel, socketKey, 10000, 32768);
+                final var benchmarkHandler = new ThroughputReadHandler(socketChannel, socketKey, 1000000, 32768);
                 final var synchronizationHandler = new SynchronizationHandler(socketChannel, socketKey, benchmarkHandler);
                 socketKey.attach(synchronizationHandler);
                 reactor.addIncomingConnection();

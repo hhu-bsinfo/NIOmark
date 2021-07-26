@@ -53,7 +53,7 @@ public class ConnectionHandler extends Handler {
         }
 
         // TODO: Replace hardcoded values with variables
-        final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, 10000, 32768);
+        final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, 1000000, 32768);
         final var synchronizationHandler = new SynchronizationHandler(socketChannel, key, benchmarkHandler);
         key.attach(synchronizationHandler);
         reactor.addEstablishedConnection(remoteAddress);
