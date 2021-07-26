@@ -16,8 +16,6 @@ abstract class Reactor implements Runnable, Closeable {
     public void run() {
         isRunning = true;
 
-        prepare(selector);
-
         while (isRunning) {
             react(selector);
         }
@@ -28,8 +26,6 @@ abstract class Reactor implements Runnable, Closeable {
         isRunning = false;
         selector.wakeup();
     }
-
-    protected abstract void prepare(final Selector selector);
 
     protected abstract void react(final Selector selector);
 

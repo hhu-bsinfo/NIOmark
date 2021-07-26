@@ -31,8 +31,12 @@ class Acceptor extends Handler {
                 socketChannel = serverSocketChannel.accept();
                 socketChannel.configureBlocking(false);
                 final var socketKey = socketChannel.register(key.selector(), SelectionKey.OP_WRITE);
-                final var handler = new ConnectionHandler(reactor, socketChannel, socketKey);
-                socketKey.attach(handler);
+
+                // TODO: Replace hardcoded values with variables
+                final var benchmarkHandler = new ThroughputReadHandler(socketChannel, socketKey, 10000, 32768);
+                final var synchronizationHandler = new SynchronizationHandler(socketChannel, socketKey, benchmarkHandler);
+                socketKey.attach(synchronizationHandler);
+                reactor.addIncomingConnection();
             } catch (IOException e) {
                 LOGGER.error("Failed to accept connection request", e);
                 return;

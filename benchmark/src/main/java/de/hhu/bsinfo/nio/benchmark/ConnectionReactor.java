@@ -32,9 +32,6 @@ public class ConnectionReactor extends Reactor {
     }
 
     @Override
-    protected void prepare(Selector selector) {}
-
-    @Override
     public void react(final Selector selector) {
         for (final var address : remainingConnections) {
             try {

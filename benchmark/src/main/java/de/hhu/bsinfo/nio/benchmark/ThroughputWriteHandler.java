@@ -29,7 +29,9 @@ public class ThroughputWriteHandler extends BenchmarkHandler {
     }
 
     @Override
-    protected void start() {
+    protected void start(final SelectionKey key) {
+        LOGGER.info("Starting throughput write handler");
+        key.interestOps(SelectionKey.OP_WRITE);
         startTime = System.nanoTime();
     }
 

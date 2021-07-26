@@ -15,23 +15,13 @@ public class BenchmarkReactor extends Reactor {
     }
 
     @Override
-    protected void prepare(Selector selector) {
-        for (final var key : selector.keys()) {
-            final var handler = key.attachment();
-            if (handler instanceof BenchmarkHandler) {
-                ((BenchmarkHandler) handler).start();
-            }
-        }
-    }
-
-    @Override
     protected void react(final Selector selector) {
         if (selector.keys().isEmpty()) {
             close();
         }
 
         try {
-            selector.select();
+            selector.selectNow();
         } catch (IOException e) {
             LOGGER.error("Failed to select keys", e);
             return;
