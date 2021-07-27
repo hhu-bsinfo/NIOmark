@@ -44,8 +44,7 @@ public class ThroughputWriteHandler extends BenchmarkHandler {
 
     @Override
     protected void handle(final SelectionKey key) {
-        if (!key.isWritable()) {
-            LOGGER.warn("Write handler called, although key is not writable");
+        if (!key.isWritable() || startTime == 0) {
             return;
         }
 

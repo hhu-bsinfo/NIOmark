@@ -45,8 +45,7 @@ public class ThroughputReadHandler extends BenchmarkHandler {
 
     @Override
     protected void handle(final SelectionKey key) {
-        if (!key.isReadable()) {
-            LOGGER.warn("Read handler called, although key is not readable");
+        if (!key.isReadable() || startTime == 0) {
             return;
         }
 

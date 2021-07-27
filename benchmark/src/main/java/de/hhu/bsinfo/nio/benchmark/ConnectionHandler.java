@@ -15,13 +15,15 @@ public class ConnectionHandler extends Handler {
 
     private final ConnectionReactor reactor;
     private final Combiner combiner;
+    private final SynchronizationCounter synchronizationCounter;
     private final SocketChannel socketChannel;
     private final InetSocketAddress remoteAddress;
 
-    public ConnectionHandler(final ConnectionReactor reactor, final Combiner combiner, final SocketChannel socketChannel, final SelectionKey key, final InetSocketAddress remoteAddress) {
+    public ConnectionHandler(final ConnectionReactor reactor, final Combiner combiner, final SynchronizationCounter synchronizationCounter, final SocketChannel socketChannel, final SelectionKey key, final InetSocketAddress remoteAddress) {
         super(key);
         this.reactor = reactor;
         this.combiner = combiner;
+        this.synchronizationCounter = synchronizationCounter;
         this.socketChannel = socketChannel;
         this.remoteAddress = remoteAddress;
     }
@@ -55,7 +57,7 @@ public class ConnectionHandler extends Handler {
 
         // TODO: Replace hardcoded values with variables
         final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, combiner, 1000000, 32768);
-        final var synchronizationHandler = new SynchronizationHandler(socketChannel, key, benchmarkHandler);
+        final var synchronizationHandler = new SynchronizationHandler(socketChannel, key, synchronizationCounter, benchmarkHandler);
         key.attach(synchronizationHandler);
         reactor.addEstablishedConnection(remoteAddress);
 

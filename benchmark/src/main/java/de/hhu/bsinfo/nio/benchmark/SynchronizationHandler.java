@@ -18,11 +18,13 @@ public class SynchronizationHandler extends Handler {
     private final ByteBuffer receiveBuffer = ByteBuffer.allocateDirect(SYNC_MESSAGE.getBytes(StandardCharsets.UTF_8).length);
 
     private final SocketChannel socketChannel;
+    private final SynchronizationCounter synchronizationCounter;
     private final BenchmarkHandler benchmarkHandler;
 
-    protected SynchronizationHandler(final SocketChannel socketChannel, final SelectionKey key, final BenchmarkHandler benchmarkHandler) {
+    protected SynchronizationHandler(final SocketChannel socketChannel, final SelectionKey key, final SynchronizationCounter synchronizationCounter, final BenchmarkHandler benchmarkHandler) {
         super(key);
         this.socketChannel = socketChannel;
+        this.synchronizationCounter = synchronizationCounter;
         this.benchmarkHandler = benchmarkHandler;
         key.interestOps(SelectionKey.OP_WRITE);
     }
@@ -40,7 +42,7 @@ public class SynchronizationHandler extends Handler {
     protected void close(final SelectionKey key) throws IOException {
         LOGGER.info("Closing synchronization handler");
         key.attach(benchmarkHandler);
-        benchmarkHandler.start(key);
+        synchronizationCounter.decrement();
     }
 
     private void handleWrite(final SelectionKey key) {

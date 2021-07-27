@@ -15,12 +15,14 @@ class Acceptor extends Handler {
 
     private final ConnectionReactor reactor;
     private final Combiner combiner;
+    private final SynchronizationCounter synchronizationCounter;
     private final ServerSocketChannel serverSocketChannel;
 
-    public Acceptor(final ConnectionReactor reactor, final Combiner combiner, final ServerSocketChannel serverSocketChannel, final SelectionKey key) {
+    public Acceptor(final ConnectionReactor reactor, final Combiner combiner, final SynchronizationCounter synchronizationCounter, final ServerSocketChannel serverSocketChannel, final SelectionKey key) {
         super(key);
         this.reactor = reactor;
         this.combiner = combiner;
+        this.synchronizationCounter = synchronizationCounter;
         this.serverSocketChannel = serverSocketChannel;
     }
 
@@ -37,7 +39,7 @@ class Acceptor extends Handler {
 
                 // TODO: Replace hardcoded values with variables
                 final var benchmarkHandler = new ThroughputReadHandler(socketChannel, socketKey,  combiner, 1000000, 32768);
-                final var synchronizationHandler = new SynchronizationHandler(socketChannel, socketKey, benchmarkHandler);
+                final var synchronizationHandler = new SynchronizationHandler(socketChannel, socketKey, synchronizationCounter, benchmarkHandler);
                 socketKey.attach(synchronizationHandler);
                 reactor.addIncomingConnection();
             } catch (IOException e) {

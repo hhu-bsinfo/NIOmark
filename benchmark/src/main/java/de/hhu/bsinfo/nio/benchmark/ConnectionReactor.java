@@ -18,6 +18,7 @@ public class ConnectionReactor extends Reactor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionReactor.class);
 
     private final Combiner combiner;
+    private final SynchronizationCounter synchronizationCounter;
     private final Set<InetSocketAddress> outgoingConnections;
     private final Set<InetSocketAddress> remainingConnections;
     private final Set<InetSocketAddress> establishedConnections;
@@ -26,9 +27,10 @@ public class ConnectionReactor extends Reactor {
     private boolean outgoingConnectionsFinished = false;
     private boolean incomingConnectionsFinished = false;
 
-    public ConnectionReactor(final Selector selector, final Combiner combiner, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
+    public ConnectionReactor(final Selector selector, final Combiner combiner, final SynchronizationCounter synchronizationCounter, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
         super(selector);
         this.combiner = combiner;
+        this.synchronizationCounter = synchronizationCounter;
         this.outgoingConnections = Set.copyOf(outgoingConnections);
         this.remainingConnections = new HashSet<>(outgoingConnections);
         this.establishedConnections = new HashSet<>();
@@ -43,7 +45,7 @@ public class ConnectionReactor extends Reactor {
                 socketChannel.configureBlocking(false);
 
                 final var socketKey = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-                final var handler = new ConnectionHandler(this, combiner, socketChannel, socketKey, address);
+                final var handler = new ConnectionHandler(this, combiner, synchronizationCounter, socketChannel, socketKey, address);
                 socketKey.attach(handler);
 
                 socketChannel.connect(address);
@@ -69,7 +71,8 @@ public class ConnectionReactor extends Reactor {
 
         for (final var key : selector.selectedKeys()) {
             final Runnable runnable = (Runnable) key.attachment();
-            if (runnable != null) {
+
+            if (runnable instanceof ConnectionHandler || runnable instanceof Acceptor) {
                 runnable.run();
             }
         }

@@ -1,7 +1,6 @@
 package de.hhu.bsinfo.nio.benchmark;
 
 import de.hhu.bsinfo.nio.benchmark.result.Combiner;
-import de.hhu.bsinfo.nio.benchmark.result.Measurement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +13,11 @@ public class BenchmarkReactor extends Reactor {
 
     private final Combiner combiner;
 
-    protected BenchmarkReactor(final Selector selector, Combiner combiner) {
+    protected BenchmarkReactor(final Selector selector, final Combiner combiner, final SynchronizationCounter synchronizationCounter) {
         super(selector);
         this.combiner = combiner;
+
+        synchronizationCounter.onZeroReached(() -> startMeasurements(selector));
     }
 
     @Override
@@ -34,13 +35,20 @@ public class BenchmarkReactor extends Reactor {
         }
 
         for (final var key : selector.selectedKeys()) {
-            final Runnable runnable = (Runnable) key.attachment();
-            if (runnable != null) {
-                runnable.run();
-            }
+            ((Runnable) key.attachment()).run();
         }
 
         selector.selectedKeys().clear();
+    }
+
+    void startMeasurements(final Selector selector) {
+        LOGGER.info("Synchronization finished -> Starting benchmark");
+
+        for (final var key : selector.keys()) {
+            if (key.attachment() instanceof BenchmarkHandler) {
+                ((BenchmarkHandler) key.attachment()).start(key);
+            }
+        }
     }
 
     private void printMeasurements() {
