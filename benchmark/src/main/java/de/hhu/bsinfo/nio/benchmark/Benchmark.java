@@ -21,18 +21,18 @@ public class Benchmark implements Runnable, Closeable {
     private final ConnectionReactor connectionReactor;
     private final BenchmarkReactor benchmarkReactor;
 
-    private Benchmark(final Selector selector, final Combiner combiner, final SynchronizationCounter synchronizationCounter, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
-        connectionReactor = new ConnectionReactor(selector, combiner, synchronizationCounter, outgoingConnections, incomingConnections);
+    private Benchmark(final Selector selector, final Combiner combiner, final BenchmarkConfiguration configuration, final SynchronizationCounter synchronizationCounter, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
+        connectionReactor = new ConnectionReactor(selector, combiner, configuration, synchronizationCounter, outgoingConnections, incomingConnections);
         benchmarkReactor = new BenchmarkReactor(selector, combiner, synchronizationCounter);
     }
 
-    public static Benchmark createBenchmark(final InetSocketAddress localAddress, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) throws IOException {
+    public static Benchmark createBenchmark(final BenchmarkConfiguration configuration, final InetSocketAddress localAddress, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) throws IOException {
         LOGGER.info("Creating benchmark instance (localAddress: [{}], outgoingConnections: [{}])", localAddress, outgoingConnections);
 
         final var selector = Selector.open();
         final var combiner = new ThroughputCombiner();
         final var synchronizationCounter = new SynchronizationCounter(outgoingConnections.size() + incomingConnections);
-        final var benchmark = new Benchmark(selector, combiner, synchronizationCounter, outgoingConnections, incomingConnections);
+        final var benchmark = new Benchmark(selector, combiner, configuration, synchronizationCounter, outgoingConnections, incomingConnections);
 
         if (incomingConnections > 0) {
             final var serverSocketChannel = ServerSocketChannel.open();
@@ -40,7 +40,7 @@ public class Benchmark implements Runnable, Closeable {
             serverSocketChannel.bind(localAddress);
 
             final var serverKey = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            final var acceptor = new Acceptor(benchmark.connectionReactor, combiner, synchronizationCounter, serverSocketChannel, serverKey);
+            final var acceptor = new Acceptor(benchmark.connectionReactor, combiner, configuration, synchronizationCounter, serverSocketChannel, serverKey);
             serverKey.attach(acceptor);
         }
 

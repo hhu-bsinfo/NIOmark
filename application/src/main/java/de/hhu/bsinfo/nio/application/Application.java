@@ -2,6 +2,7 @@ package de.hhu.bsinfo.nio.application;
 
 import de.hhu.bsinfo.nio.benchmark.Benchmark;
 import de.hhu.bsinfo.nio.application.util.InetSocketAddressConverter;
+import de.hhu.bsinfo.nio.benchmark.BenchmarkConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -29,6 +30,18 @@ public class Application implements Runnable {
             description = "The amount of incoming connection to wait for.")
     private int incomingConnections = 0;
 
+    @CommandLine.Option(
+            names = {"-c", "--count"},
+            description = "The amount of messages to send/receive per connection",
+            required = true)
+    private int operationCount;
+
+    @CommandLine.Option(
+            names = {"-s", "--size"},
+            description = "The message size",
+            required = true)
+    private int operationSize;
+
     @CommandLine.Parameters(
             description = "The remote addresses to connect to."
     )
@@ -40,8 +53,10 @@ public class Application implements Runnable {
     public void run() {
         Benchmark.printBanner();
 
+        final var configuration = new BenchmarkConfiguration(operationCount, operationSize);
+
         try {
-            benchmark = Benchmark.createBenchmark(bindAddress, outgoingConnections, incomingConnections);
+            benchmark = Benchmark.createBenchmark(configuration, bindAddress, outgoingConnections, incomingConnections);
         } catch (IOException e) {
             LOGGER.error("Failed to create benchmark instance", e);
             return;

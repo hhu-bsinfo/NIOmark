@@ -15,14 +15,16 @@ public class ConnectionHandler extends Handler {
 
     private final ConnectionReactor reactor;
     private final Combiner combiner;
+    private final BenchmarkConfiguration configuration;
     private final SynchronizationCounter synchronizationCounter;
     private final SocketChannel socketChannel;
     private final InetSocketAddress remoteAddress;
 
-    public ConnectionHandler(final ConnectionReactor reactor, final Combiner combiner, final SynchronizationCounter synchronizationCounter, final SocketChannel socketChannel, final SelectionKey key, final InetSocketAddress remoteAddress) {
+    public ConnectionHandler(final ConnectionReactor reactor, final Combiner combiner, final BenchmarkConfiguration configuration, final SynchronizationCounter synchronizationCounter, final SocketChannel socketChannel, final SelectionKey key, final InetSocketAddress remoteAddress) {
         super(key);
         this.reactor = reactor;
         this.combiner = combiner;
+        this.configuration = configuration;
         this.synchronizationCounter = synchronizationCounter;
         this.socketChannel = socketChannel;
         this.remoteAddress = remoteAddress;
@@ -55,8 +57,7 @@ public class ConnectionHandler extends Handler {
             LOGGER.info("Established connection");
         }
 
-        // TODO: Replace hardcoded values with variables
-        final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, combiner, 1000000, 32768);
+        final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, combiner, configuration.getOperationCount(), configuration.getOperationSize());
         final var synchronizationHandler = new SynchronizationHandler(socketChannel, key, synchronizationCounter, benchmarkHandler);
         key.attach(synchronizationHandler);
         reactor.addEstablishedConnection(remoteAddress);

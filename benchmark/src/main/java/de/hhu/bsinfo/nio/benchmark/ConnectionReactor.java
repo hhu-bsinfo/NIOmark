@@ -18,6 +18,7 @@ public class ConnectionReactor extends Reactor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionReactor.class);
 
     private final Combiner combiner;
+    private final BenchmarkConfiguration configuration;
     private final SynchronizationCounter synchronizationCounter;
     private final Set<InetSocketAddress> outgoingConnections;
     private final Set<InetSocketAddress> remainingConnections;
@@ -27,9 +28,10 @@ public class ConnectionReactor extends Reactor {
     private boolean outgoingConnectionsFinished = false;
     private boolean incomingConnectionsFinished = false;
 
-    public ConnectionReactor(final Selector selector, final Combiner combiner, final SynchronizationCounter synchronizationCounter, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
+    public ConnectionReactor(final Selector selector, final Combiner combiner, final BenchmarkConfiguration configuration, final SynchronizationCounter synchronizationCounter, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
         super(selector);
         this.combiner = combiner;
+        this.configuration = configuration;
         this.synchronizationCounter = synchronizationCounter;
         this.outgoingConnections = Set.copyOf(outgoingConnections);
         this.remainingConnections = new HashSet<>(outgoingConnections);
@@ -45,7 +47,7 @@ public class ConnectionReactor extends Reactor {
                 socketChannel.configureBlocking(false);
 
                 final var socketKey = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-                final var handler = new ConnectionHandler(this, combiner, synchronizationCounter, socketChannel, socketKey, address);
+                final var handler = new ConnectionHandler(this, combiner, configuration, synchronizationCounter, socketChannel, socketKey, address);
                 socketKey.attach(handler);
 
                 socketChannel.connect(address);
