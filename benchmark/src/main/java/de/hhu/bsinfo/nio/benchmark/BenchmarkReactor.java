@@ -1,6 +1,7 @@
 package de.hhu.bsinfo.nio.benchmark;
 
-import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
+import de.hhu.bsinfo.nio.benchmark.result.Combiner;
+import de.hhu.bsinfo.nio.benchmark.result.Measurement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,15 +12,18 @@ public class BenchmarkReactor extends Reactor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BenchmarkReactor.class);
 
-    protected BenchmarkReactor(final Selector selector) {
+    private final Combiner combiner;
+
+    protected BenchmarkReactor(final Selector selector, Combiner combiner) {
         super(selector);
+        this.combiner = combiner;
     }
 
     @Override
     protected void react(final Selector selector) {
         if (selector.keys().isEmpty()) {
-            LOGGER.info("{}", ThroughputCombiner.getInstance().getCombinedMeasurement());
             close();
+            printMeasurements();
         }
 
         try {
@@ -37,5 +41,13 @@ public class BenchmarkReactor extends Reactor {
         }
 
         selector.selectedKeys().clear();
+    }
+
+    private void printMeasurements() {
+        for (final var measurement : combiner.getMeasurements()) {
+            LOGGER.info(measurement.toString());
+        }
+
+        LOGGER.info(combiner.combine().toString());
     }
 }

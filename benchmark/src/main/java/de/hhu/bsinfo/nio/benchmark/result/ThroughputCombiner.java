@@ -1,31 +1,25 @@
 package de.hhu.bsinfo.nio.benchmark.result;
 
-import java.util.List;
-import java.util.ArrayList;
+public class ThroughputCombiner extends Combiner {
 
-public class ThroughputCombiner {
+    @Override
+    protected Measurement combineMeasurements(Measurement[] measurements) {
+        if (measurements.length == 0) {
+            return new ThroughputMeasurement(0, 0);
+        }
 
-    private static final ThroughputCombiner INSTANCE = new ThroughputCombiner();
-
-    private final List<ThroughputMeasurement> measurements = new ArrayList<>();
-
-    public static ThroughputCombiner getInstance() {
-        return INSTANCE;
-    }
-
-    public void addMeasurement(final ThroughputMeasurement measurement) {
-        measurements.add(measurement);
-    }
-
-    public ThroughputMeasurement getCombinedMeasurement() {
         double operationThroughput = 0;
         double dataThroughput = 0;
         for (final var measurement : measurements) {
-            operationThroughput += measurement.getOperationThroughput();
-            dataThroughput += measurement.getDataThroughput();
+            if (!(measurement instanceof ThroughputMeasurement)) {
+                throw new IllegalArgumentException("Throughput combiner can only combine throughput measurements!");
+            }
+
+            operationThroughput += ((ThroughputMeasurement) measurement).getOperationThroughput();
+            dataThroughput += ((ThroughputMeasurement) measurement).getDataThroughput();
         }
 
-        final var combined = new ThroughputMeasurement(measurements.get(0).getOperationCount(), measurements.get(0).getOperationSize());
+        final var combined = new ThroughputMeasurement(measurements[0].getOperationCount(), measurements[0].getOperationSize());
         combined.setOperationThroughput(operationThroughput);
         combined.setDataThroughput(dataThroughput);
 

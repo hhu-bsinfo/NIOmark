@@ -1,26 +1,27 @@
 package de.hhu.bsinfo.nio.benchmark;
 
+import de.hhu.bsinfo.nio.benchmark.result.Combiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
 
 public class ConnectionHandler extends Handler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionHandler.class);
 
     private final ConnectionReactor reactor;
+    private final Combiner combiner;
     private final SocketChannel socketChannel;
     private final InetSocketAddress remoteAddress;
 
-    public ConnectionHandler(final ConnectionReactor reactor, final SocketChannel socketChannel, final SelectionKey key, final InetSocketAddress remoteAddress) {
+    public ConnectionHandler(final ConnectionReactor reactor, final Combiner combiner, final SocketChannel socketChannel, final SelectionKey key, final InetSocketAddress remoteAddress) {
         super(key);
         this.reactor = reactor;
+        this.combiner = combiner;
         this.socketChannel = socketChannel;
         this.remoteAddress = remoteAddress;
     }
@@ -53,7 +54,7 @@ public class ConnectionHandler extends Handler {
         }
 
         // TODO: Replace hardcoded values with variables
-        final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, 1000000, 32768);
+        final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, combiner, 1000000, 32768);
         final var synchronizationHandler = new SynchronizationHandler(socketChannel, key, benchmarkHandler);
         key.attach(synchronizationHandler);
         reactor.addEstablishedConnection(remoteAddress);

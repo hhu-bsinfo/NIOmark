@@ -1,5 +1,7 @@
 package de.hhu.bsinfo.nio.benchmark;
 
+import de.hhu.bsinfo.nio.benchmark.result.Combiner;
+import de.hhu.bsinfo.nio.benchmark.result.Measurement;
 import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
 import de.hhu.bsinfo.nio.benchmark.result.ThroughputMeasurement;
 import org.slf4j.Logger;
@@ -21,8 +23,8 @@ public class ThroughputReadHandler extends BenchmarkHandler {
     private int remainingMessages;
     private long startTime;
 
-    protected ThroughputReadHandler(final SocketChannel socket, final SelectionKey key, final int messageCount, final int messageSize) {
-        super(key);
+    protected ThroughputReadHandler(final SocketChannel socket, final SelectionKey key, final Combiner combiner, final int messageCount, final int messageSize) {
+        super(key, combiner);
         this.socket = socket;
         remainingMessages = messageCount;
         messageBuffer = ByteBuffer.allocateDirect(messageSize);
@@ -34,6 +36,11 @@ public class ThroughputReadHandler extends BenchmarkHandler {
         LOGGER.info("Starting throughput read handler");
         key.interestOps(SelectionKey.OP_READ);
         startTime = System.nanoTime();
+    }
+
+    @Override
+    protected Measurement getMeasurement() {
+        return measurement;
     }
 
     @Override
@@ -55,19 +62,12 @@ public class ThroughputReadHandler extends BenchmarkHandler {
         }
 
         if (remainingMessages <= 0) {
+            measurement.setMeasuredTime(System.nanoTime() - startTime);
             try {
                 close();
             } catch (IOException e) {
-                LOGGER.error("Failed to close handler!", e);
+                LOGGER.error("Failed to close throughput read handler");
             }
         }
-    }
-
-    @Override
-    protected void close(final SelectionKey key) throws IOException {
-        key.cancel();
-        measurement.setMeasuredTime(System.nanoTime() - startTime);
-        ThroughputCombiner.getInstance().addMeasurement(measurement);
-        LOGGER.info(measurement.toString());
     }
 }

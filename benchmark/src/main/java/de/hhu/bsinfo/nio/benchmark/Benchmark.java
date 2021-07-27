@@ -1,5 +1,7 @@
 package de.hhu.bsinfo.nio.benchmark;
 
+import de.hhu.bsinfo.nio.benchmark.result.Combiner;
+import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
 import de.hhu.bsinfo.nio.generated.BuildConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,8 +11,6 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,16 +21,17 @@ public class Benchmark implements Runnable, Closeable {
     private final ConnectionReactor connectionReactor;
     private final BenchmarkReactor benchmarkReactor;
 
-    private Benchmark(final Selector selector, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
-        connectionReactor = new ConnectionReactor(selector, outgoingConnections, incomingConnections);
-        benchmarkReactor = new BenchmarkReactor(selector);
+    private Benchmark(final Selector selector, final Combiner combiner, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
+        connectionReactor = new ConnectionReactor(selector, combiner, outgoingConnections, incomingConnections);
+        benchmarkReactor = new BenchmarkReactor(selector, combiner);
     }
 
     public static Benchmark createBenchmark(final InetSocketAddress localAddress, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) throws IOException {
         LOGGER.info("Creating benchmark instance (localAddress: [{}], outgoingConnections: {})", localAddress, outgoingConnections);
 
         final var selector = Selector.open();
-        final var benchmark = new Benchmark(selector, outgoingConnections, incomingConnections);
+        final var combiner = new ThroughputCombiner();
+        final var benchmark = new Benchmark(selector, combiner, outgoingConnections, incomingConnections);
 
         if (incomingConnections > 0) {
             final var serverSocketChannel = ServerSocketChannel.open();
@@ -38,7 +39,7 @@ public class Benchmark implements Runnable, Closeable {
             serverSocketChannel.bind(localAddress);
 
             final var serverKey = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
-            final var acceptor = new Acceptor(benchmark.connectionReactor, serverSocketChannel, serverKey);
+            final var acceptor = new Acceptor(benchmark.connectionReactor, combiner, serverSocketChannel, serverKey);
             serverKey.attach(acceptor);
         }
 

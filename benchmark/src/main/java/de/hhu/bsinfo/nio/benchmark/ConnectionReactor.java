@@ -1,5 +1,7 @@
 package de.hhu.bsinfo.nio.benchmark;
 
+import de.hhu.bsinfo.nio.benchmark.result.Combiner;
+import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,7 @@ public class ConnectionReactor extends Reactor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionReactor.class);
 
+    private final Combiner combiner;
     private final Set<InetSocketAddress> outgoingConnections;
     private final Set<InetSocketAddress> remainingConnections;
     private final Set<InetSocketAddress> establishedConnections;
@@ -23,8 +26,9 @@ public class ConnectionReactor extends Reactor {
     private boolean outgoingConnectionsFinished = false;
     private boolean incomingConnectionsFinished = false;
 
-    public ConnectionReactor(final Selector selector, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
+    public ConnectionReactor(final Selector selector, final Combiner combiner, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
         super(selector);
+        this.combiner = combiner;
         this.outgoingConnections = Set.copyOf(outgoingConnections);
         this.remainingConnections = new HashSet<>(outgoingConnections);
         this.establishedConnections = new HashSet<>();
@@ -39,7 +43,7 @@ public class ConnectionReactor extends Reactor {
                 socketChannel.configureBlocking(false);
 
                 final var socketKey = socketChannel.register(selector, SelectionKey.OP_CONNECT);
-                final var handler = new ConnectionHandler(this, socketChannel, socketKey, address);
+                final var handler = new ConnectionHandler(this, combiner, socketChannel, socketKey, address);
                 socketKey.attach(handler);
 
                 socketChannel.connect(address);
