@@ -1,4 +1,4 @@
-# nio-benchmark
+# NIOmark
 
 Benchmark application for Java NIO, supporting multiple communication patterns.
 

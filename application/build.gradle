@@ -15,7 +15,7 @@ compileJava {
 }
 
 application {
-    applicationName = 'nio-benchmark'
+    applicationName = 'niomark'
     mainClassName = 'de.hhu.bsinfo.nio.application.Application'
 }
 
