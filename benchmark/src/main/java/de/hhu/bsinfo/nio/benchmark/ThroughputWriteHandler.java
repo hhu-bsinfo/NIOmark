@@ -44,7 +44,7 @@ public class ThroughputWriteHandler extends BenchmarkHandler {
 
     @Override
     protected void handle(final SelectionKey key) {
-        if (!key.isWritable() || startTime == 0) {
+        if (startTime == 0 || !key.isWritable()) {
             return;
         }
 
@@ -60,12 +60,19 @@ public class ThroughputWriteHandler extends BenchmarkHandler {
         }
 
         if (remainingMessages <= 0) {
+            final var synchronizationCounter = new SynchronizationCounter(1);
+            synchronizationCounter.onZeroReached(this::finishMeasurement);
+            final var synchronizationHandler = new SynchronizationHandler(socket, key, synchronizationCounter, null);
+            key.attach(synchronizationHandler);
+        }
+    }
+
+    private void finishMeasurement() {
+        try {
             measurement.setMeasuredTime(System.nanoTime() - startTime);
-            try {
-                close();
-            } catch (IOException e) {
-                LOGGER.error("Failed to close throughput write handler");
-            }
+            close();
+        } catch (IOException e) {
+            LOGGER.error("Failed to close throughput write handler");
         }
     }
 }

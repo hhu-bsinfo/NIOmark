@@ -2,7 +2,6 @@ package de.hhu.bsinfo.nio.benchmark;
 
 import de.hhu.bsinfo.nio.benchmark.result.Combiner;
 import de.hhu.bsinfo.nio.benchmark.result.Measurement;
-import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
 import de.hhu.bsinfo.nio.benchmark.result.ThroughputMeasurement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +44,7 @@ public class ThroughputReadHandler extends BenchmarkHandler {
 
     @Override
     protected void handle(final SelectionKey key) {
-        if (!key.isReadable() || startTime == 0) {
+        if (startTime == 0 || !key.isReadable()) {
             return;
         }
 
@@ -61,12 +60,19 @@ public class ThroughputReadHandler extends BenchmarkHandler {
         }
 
         if (remainingMessages <= 0) {
+            final var synchronizationCounter = new SynchronizationCounter(1);
+            synchronizationCounter.onZeroReached(this::finishMeasurement);
+            final var synchronizationHandler = new SynchronizationHandler(socket, key, synchronizationCounter, null);
+            key.attach(synchronizationHandler);
+        }
+    }
+
+    private void finishMeasurement() {
+        try {
             measurement.setMeasuredTime(System.nanoTime() - startTime);
-            try {
-                close();
-            } catch (IOException e) {
-                LOGGER.error("Failed to close throughput read handler");
-            }
+            close();
+        } catch (IOException e) {
+            LOGGER.error("Failed to close throughput write handler");
         }
     }
 }
