@@ -1,6 +1,7 @@
 package de.hhu.bsinfo.nio.benchmark;
 
 import de.hhu.bsinfo.nio.benchmark.result.Combiner;
+import de.hhu.bsinfo.nio.benchmark.result.LatencyCombiner;
 import de.hhu.bsinfo.nio.benchmark.result.ThroughputCombiner;
 import de.hhu.bsinfo.nio.generated.BuildConfig;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class Benchmark implements Runnable, Closeable {
         LOGGER.info("Creating benchmark instance (localAddress: [{}], outgoingConnections: [{}])", localAddress, outgoingConnections);
 
         final var selector = Selector.open();
-        final var combiner = new ThroughputCombiner();
+        final var combiner = configuration.getType() == BenchmarkConfiguration.BenchmarkType.THROUGHPUT ? new ThroughputCombiner() : new LatencyCombiner();
         final var synchronizationCounter = new SynchronizationCounter(outgoingConnections.size() + incomingConnections);
         final var benchmark = new Benchmark(selector, combiner, configuration, synchronizationCounter, outgoingConnections, incomingConnections);
 

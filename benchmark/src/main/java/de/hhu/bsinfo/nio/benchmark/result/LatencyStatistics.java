@@ -9,7 +9,8 @@ import java.util.Arrays;
  * @date 2018
  */
 class LatencyStatistics {
-    private long[] times;
+
+    private final long[] times;
     private int pos;
 
     private long tmpTime;
@@ -24,6 +25,12 @@ class LatencyStatistics {
         pos = 0;
     }
 
+    LatencyStatistics(long[] times) {
+        this.times = times;
+        pos = times.length;
+        sortAscending();
+    }
+
     /**
      * Start measuring time.
      */
@@ -35,7 +42,9 @@ class LatencyStatistics {
      * Stop measuring time (must be preceded by a call to start).
      */
     void stop() {
-        times[pos++] = System.nanoTime() - tmpTime;
+        if (tmpTime != 0) {
+            times[pos++] = System.nanoTime() - tmpTime;
+        }
     }
 
     /**
@@ -98,5 +107,9 @@ class LatencyStatistics {
         }
 
         return times[(int) Math.ceil(perc * pos) - 1];
+    }
+
+    long[] getTimesArray() {
+        return times;
     }
 }

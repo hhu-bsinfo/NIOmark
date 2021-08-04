@@ -11,6 +11,11 @@ public class LatencyMeasurement extends Measurement {
         latencyStatistics = new LatencyStatistics(operationCount);
     }
 
+    public LatencyMeasurement(int operationCount, int operationSize, long[] latencies) {
+        super(operationCount, operationSize);
+        latencyStatistics = new LatencyStatistics(latencies);
+    }
+
     public void startSingleMeasurement() {
         latencyStatistics.start();
     }
@@ -47,6 +52,10 @@ public class LatencyMeasurement extends Measurement {
 
     public double getOperationThroughput() {
         return operationThroughput;
+    }
+
+    public LatencyStatistics getStatistics() {
+        return latencyStatistics;
     }
 
     @Override

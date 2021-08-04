@@ -22,12 +22,12 @@ public class Application implements Runnable {
 
     @CommandLine.Option(
             names = {"-a", "--address"},
-            description = "The address to bind to.")
+            description = "The address to bind to")
     private InetSocketAddress bindAddress = new InetSocketAddress(DEFAULT_SERVER_PORT);
 
     @CommandLine.Option(
             names = {"-i", "--incoming"},
-            description = "The amount of incoming connection to wait for.")
+            description = "The amount of incoming connection to wait for")
     private int incomingConnections = 0;
 
     @CommandLine.Option(
@@ -42,8 +42,13 @@ public class Application implements Runnable {
             required = true)
     private int operationSize;
 
+    @CommandLine.Option(
+            names = {"-t", "--type"},
+            description = "The benchmark type (throughput/latency)")
+    private BenchmarkConfiguration.BenchmarkType type = BenchmarkConfiguration.BenchmarkType.THROUGHPUT;
+
     @CommandLine.Parameters(
-            description = "The remote addresses to connect to."
+            description = "The remote addresses to connect to"
     )
     private Set<InetSocketAddress> outgoingConnections = new HashSet<>();
 
@@ -52,8 +57,7 @@ public class Application implements Runnable {
     @Override
     public void run() {
         Benchmark.printBanner();
-
-        final var configuration = new BenchmarkConfiguration(operationCount, operationSize);
+        final var configuration = new BenchmarkConfiguration(type, operationCount, operationSize);
 
         try {
             benchmark = Benchmark.createBenchmark(configuration, bindAddress, outgoingConnections, incomingConnections);

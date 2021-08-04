@@ -57,7 +57,10 @@ public class ConnectionHandler extends Handler {
             LOGGER.info("Established connection");
         }
 
-        final var benchmarkHandler = new ThroughputWriteHandler(socketChannel, key, combiner, configuration.getOperationCount(), configuration.getOperationSize());
+        final var benchmarkHandler = configuration.getType() == BenchmarkConfiguration.BenchmarkType.THROUGHPUT ?
+                new ThroughputWriteHandler(socketChannel, key,  combiner, configuration.getOperationCount(), configuration.getOperationSize()) :
+                new LatencyServerHandler(socketChannel, key,  combiner, configuration.getOperationCount(), configuration.getOperationSize());
+
         final var synchronizationHandler = new SynchronizationHandler(socketChannel, key, synchronizationCounter, benchmarkHandler);
         key.attach(synchronizationHandler);
         reactor.addEstablishedConnection(remoteAddress);

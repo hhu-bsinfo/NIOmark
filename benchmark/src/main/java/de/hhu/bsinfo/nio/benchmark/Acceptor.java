@@ -39,7 +39,10 @@ class Acceptor extends Handler {
                 socketChannel.configureBlocking(false);
                 final var socketKey = socketChannel.register(key.selector(), SelectionKey.OP_WRITE);
 
-                final var benchmarkHandler = new ThroughputReadHandler(socketChannel, socketKey,  combiner, configuration.getOperationCount(), configuration.getOperationSize());
+                final var benchmarkHandler = configuration.getType() == BenchmarkConfiguration.BenchmarkType.THROUGHPUT ?
+                        new ThroughputReadHandler(socketChannel, socketKey,  combiner, configuration.getOperationCount(), configuration.getOperationSize()) :
+                        new LatencyClientHandler(socketChannel, socketKey,  combiner, configuration.getOperationCount(), configuration.getOperationSize());
+
                 final var synchronizationHandler = new SynchronizationHandler(socketChannel, socketKey, synchronizationCounter, benchmarkHandler);
                 socketKey.attach(synchronizationHandler);
                 reactor.addIncomingConnection();

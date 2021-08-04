@@ -33,8 +33,8 @@ public class ThroughputWriteHandler extends BenchmarkHandler {
     @Override
     protected void start(final SelectionKey key) {
         LOGGER.info("Starting throughput write handler");
-        key.interestOps(SelectionKey.OP_WRITE);
         startTime = System.nanoTime();
+        key.interestOps(SelectionKey.OP_WRITE);
     }
 
     @Override
@@ -56,14 +56,12 @@ public class ThroughputWriteHandler extends BenchmarkHandler {
 
         if (!messageBuffer.hasRemaining()) {
             messageBuffer.clear();
-            remainingMessages--;
-        }
-
-        if (remainingMessages <= 0) {
-            final var synchronizationCounter = new SynchronizationCounter(1);
-            synchronizationCounter.onZeroReached(this::finishMeasurement);
-            final var synchronizationHandler = new SynchronizationHandler(socket, key, synchronizationCounter, null);
-            key.attach(synchronizationHandler);
+            if (--remainingMessages <= 0) {
+                final var synchronizationCounter = new SynchronizationCounter(1);
+                synchronizationCounter.onZeroReached(this::finishMeasurement);
+                final var synchronizationHandler = new SynchronizationHandler(socket, key, synchronizationCounter, null);
+                key.attach(synchronizationHandler);
+            }
         }
     }
 
