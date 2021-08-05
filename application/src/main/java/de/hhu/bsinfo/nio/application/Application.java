@@ -43,7 +43,12 @@ public class Application implements Runnable {
     private int operationSize;
 
     @CommandLine.Option(
-            names = {"-t", "--type"},
+            names = {"-t", "--threads"},
+            description = "The thread pool size; Set it to zero, to not use a thread pool, but only the main thread instead (Default: 0)")
+    private int threadCount = 0;
+
+    @CommandLine.Option(
+            names = {"-b", "--benchmark"},
             description = "The benchmark type (throughput/latency)")
     private BenchmarkConfiguration.BenchmarkType type = BenchmarkConfiguration.BenchmarkType.THROUGHPUT;
 
@@ -57,7 +62,7 @@ public class Application implements Runnable {
     @Override
     public void run() {
         Benchmark.printBanner();
-        final var configuration = new BenchmarkConfiguration(type, operationCount, operationSize);
+        final var configuration = new BenchmarkConfiguration(type, threadCount, operationCount, operationSize);
 
         try {
             benchmark = Benchmark.createBenchmark(configuration, bindAddress, outgoingConnections, incomingConnections);

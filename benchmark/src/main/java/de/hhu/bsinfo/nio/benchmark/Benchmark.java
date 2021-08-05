@@ -24,7 +24,8 @@ public class Benchmark implements Runnable, Closeable {
 
     private Benchmark(final Selector selector, final Combiner combiner, final BenchmarkConfiguration configuration, final SynchronizationCounter synchronizationCounter, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) {
         connectionReactor = new ConnectionReactor(selector, combiner, configuration, synchronizationCounter, outgoingConnections, incomingConnections);
-        benchmarkReactor = new BenchmarkReactor(selector, combiner, synchronizationCounter);
+        benchmarkReactor = configuration.getThreadCount() == 0 ? new SingleThreadedBenchmarkReactor(selector, combiner, synchronizationCounter) :
+                new ThreadPoolBenchmarkReactor(selector, combiner, synchronizationCounter, configuration.getThreadCount());
     }
 
     public static Benchmark createBenchmark(final BenchmarkConfiguration configuration, final InetSocketAddress localAddress, final Set<InetSocketAddress> outgoingConnections, final int incomingConnections) throws IOException {

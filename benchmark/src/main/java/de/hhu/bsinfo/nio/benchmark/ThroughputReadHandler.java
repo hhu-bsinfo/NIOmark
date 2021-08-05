@@ -61,8 +61,11 @@ public class ThroughputReadHandler extends BenchmarkHandler {
                 synchronizationCounter.onZeroReached(this::finishMeasurement);
                 final var synchronizationHandler = new SynchronizationHandler(socket, key, synchronizationCounter, null);
                 key.attach(synchronizationHandler);
+                return;
             }
         }
+
+        key.interestOps(SelectionKey.OP_READ);
     }
 
     private void finishMeasurement() {

@@ -51,7 +51,9 @@ public class LatencyClientHandler extends BenchmarkHandler {
                 LOGGER.error("Failed to receive a message!");
             }
 
-            if (!messageBuffer.hasRemaining()) {
+            if (messageBuffer.hasRemaining()) {
+                key.interestOps(SelectionKey.OP_READ);
+            } else {
                 measurement.stopSingleMeasurement();
                 messageBuffer.flip();
                 key.interestOps(SelectionKey.OP_WRITE);
@@ -65,16 +67,20 @@ public class LatencyClientHandler extends BenchmarkHandler {
                 LOGGER.error("Failed to send a message!");
             }
 
-            if (!messageBuffer.hasRemaining()) {
+            if (messageBuffer.hasRemaining()) {
+                key.interestOps(SelectionKey.OP_WRITE);
+            } else {
                 messageBuffer.flip();
-                key.interestOps(SelectionKey.OP_READ);
 
                 if (--remainingMessages <= 0) {
                     final var synchronizationCounter = new SynchronizationCounter(1);
                     synchronizationCounter.onZeroReached(this::finishMeasurement);
                     final var synchronizationHandler = new SynchronizationHandler(socket, key, synchronizationCounter, null);
                     key.attach(synchronizationHandler);
+                    return;
                 }
+
+                key.interestOps(SelectionKey.OP_READ);
             }
         }
     }
