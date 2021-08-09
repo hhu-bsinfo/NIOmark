@@ -26,6 +26,9 @@ public class SynchronizationHandler extends Handler {
         this.socketChannel = socketChannel;
         this.synchronizationCounter = synchronizationCounter;
         this.benchmarkHandler = benchmarkHandler;
+
+        sendBuffer.put(SYNC_MESSAGE.getBytes(StandardCharsets.UTF_8));
+        sendBuffer.flip();
         key.interestOps(SelectionKey.OP_WRITE);
     }
 
@@ -59,7 +62,9 @@ public class SynchronizationHandler extends Handler {
                 key.cancel();
             }
 
-            if (!sendBuffer.hasRemaining()) {
+            if (sendBuffer.hasRemaining()) {
+                key.interestOps(SelectionKey.OP_WRITE);
+            } else {
                 key.interestOps(SelectionKey.OP_READ);
             }
         } catch (IOException e) {
@@ -81,7 +86,13 @@ public class SynchronizationHandler extends Handler {
                 key.cancel();
             }
 
-            if (!sendBuffer.hasRemaining()) {
+            if (!receiveBuffer.hasRemaining()) {
+                receiveBuffer.flip();
+                final var receivedMessage = StandardCharsets.UTF_8.decode(receiveBuffer).toString();
+                if (!receivedMessage.equals(SYNC_MESSAGE)) {
+                    LOGGER.error("Received wrong synchronization message (Expected: [{}], Got: [{}])", SYNC_MESSAGE, receivedMessage);
+                }
+
                 close();
             }
         } catch (IOException e) {
