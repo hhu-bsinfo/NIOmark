@@ -19,9 +19,9 @@ deploy:
   token: ${ACCESS_TOKEN}
   file:
     - ${DIST_ZIP_FILE}
-  cleanup: false
+  skip_cleanup: true
   overwrite: true
   on:
-    repo: hhu-bsinfo/nio-benchmark
+    repo: hhu-bsinfo/NIOmark
     branch: main
     tags: true
